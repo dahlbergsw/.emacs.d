@@ -1,0 +1,188 @@
+Literate org-based configuration
+
+* Package Management
+** use-package
+   #+BEGIN_SRC emacs-lisp
+     (require 'package)
+     (setq package-enable-at-startup nil)
+     (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
+     (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
+     (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/"))
+     (package-initialize)
+
+     (unless (package-installed-p 'use-package)
+       (package-refresh-contents)
+       (package-install 'use-package))
+
+     (eval-when-compile
+       (require 'use-package))
+     (require 'diminish)
+     (require 'bind-key)
+   #+END_SRC
+** Cask
+   I use =cask= for package management
+   #+BEGIN_SRC emacs-lisp
+     (require 'cask "~/.cask/cask.el")
+     (cask-initialize)
+   #+END_SRC
+* Packages
+** Org-Mode
+   #+BEGIN_SRC emacs-lisp
+     (use-package org
+       :ensure t
+       :config
+       (setq org-log-done t)
+       (setq org-todo-keywords '((sequence "TODO" "INPROGRESS" "DONE")))
+       :bind (("C-c l" . org-store-link)
+              ("C-c a" . org-agenda)))
+
+   #+END_SRC
+** SmartPowerLine
+   #+BEGIN_SRC emacs-lisp
+     ;; (use-package smart-mode-line
+     ;;   :ensure t
+     ;;   :config
+     ;;   (sml/setup))
+   #+END_SRC
+
+* Organization
+** Add org files to global agenda.
+  #+BEGIN_SRC emacs-lisp
+    (setq org-agenda-files (list "~/Dropbox/TODO.org"
+                                 "~/Dropbox/org/work.org"
+                                 "~/Dropbox/org/school.org"
+                                 "~/Dropbox/org/exercise.org"
+                                 "~/Dropbox/org/home.org"))
+  #+END_SRC
+
+** Helm configurations
+   #+BEGIN_SRC emacs-lisp
+     (require 'helm-config)
+   #+END_SRC
+
+** Projectile
+   #+BEGIN_SRC emacs-lisp
+          (use-package projectile
+            :ensure t
+            :config
+            (projectile-mode 1))
+   #+END_SRC
+
+* Terminal
+** Multi-term
+  #+BEGIN_SRC emacs-lisp
+    (require 'multi-term)
+    (setq multi-term-program "/bin/bash")
+  #+END_SRC
+* Display Preferences
+** Remove tool and menu bar
+   #+BEGIN_SRC emacs-lisp
+     (menu-bar-mode -1)
+     (tool-bar-mode -1)
+   #+END_SRC
+
+** Add pretty UTF-8 styled asterisks
+   Add nicer looking bullets for org-mode
+   #+BEGIN_SRC emacs-lisp
+    (require 'org-bullets)
+    (add-hook 'org-mode-hook
+              (lambda ()
+                (org-bullets-mode 1)))
+   #+END_SRC
+
+   Define list of UTF characters to replace asterisks. [[http://nadeausoftware.com/articles/2007/11/latency_friendly_customized_bullets_using_unicode_characters][Link]] to unicode
+   reference.
+  #+BEGIN_SRC emacs-lisp
+
+  #+END_SRC
+
+** Fringe settings
+   Remove right-hand fringe to save previous room
+   #+BEGIN_SRC emacs-lisp
+     (fringe-mode '(8 . 0))
+   #+END_SRC
+
+** Fill settings
+   Enable auto-fill mode and set fill width.
+   #+BEGIN_SRC emacs-lisp
+     (add-hook 'text-mode-hook 'turn-on-auto-fill)
+     (setq-default fill-column 80)
+   #+END_SRC
+
+** Disable auto-save and backups
+   Backup files are annoying and not useful to me, so disable them.
+   #+BEGIN_SRC emacs-lisp
+     (setq backup-inhibited t)
+     (setq auto-save-default nil)
+   #+END_SRC
+
+** Show column numbers
+   I always want to see column numbers
+   #+BEGIN_SRC emacs-lisp
+     (setq column-number-mode t)
+   #+END_SRC
+** Workgroups
+   Workgroups allows persistent window configurations to be saved to disk and
+   loaded on start up. Set the prefix key.
+   *LINK:* [[https://github.com/tlh/workgroups.el][workgroups]]
+   #+BEGIN_SRC emacs-lisp
+     (require 'workgroups)
+     (setq wg-prefix-key (kbd "C-c w"))
+     (wg-load "~/.emacs.d/packages/saved_workgroups")
+     (workgroups-mode 1)
+   #+END_SRC
+** Highlight trailing whitespace
+   I like to see if I have trailing whitespace.
+   #+BEGIN_SRC emacs-lisp
+     (setq-default show-trailing-whitespace t)
+     (add-hook 'term-mode-hook (lambda () (setq show-trailing-whitespace nil)))
+   #+END_SRC
+* Movement
+** Add org-mode like line moving with keybinding
+   #+BEGIN_SRC emacs-lisp
+     (require 'move-lines)
+     (move-lines-binding)
+   #+END_SRC
+
+* User Defined Functions
+** Edit files as sudo
+   Open file as root for editing and set key binding.
+   #+BEGIN_SRC emacs-lisp
+     (defun sudo-edit (&optional arg)
+
+       (interactive "P")
+       (if (or arg (not buffer-file-name))
+           (find-file (concat "/sudo:root@localhost:"
+                              (ido-read-file-name "Find file(as root): ")))
+         (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
+
+     (global-set-key (kbd "C-x C-r") 'sudo-edit)
+   #+END_SRC
+* Programming
+** MATLAB Mode
+   #+BEGIN_SRC emacs-lisp
+     (autoload 'matlab-mode "matlab" "Matlab Editing Mode" t)
+     (add-to-list
+      'auto-mode-alist
+      '("\\.m$" . matlab-mode))
+     (setq matlab-indent-function t)
+     (setq matlab-shell-command "matlab")
+   #+END_SRC
+
+** IPython
+   #+BEGIN_SRC emacs-lisp
+     (require 'ein)
+   #+END_SRC
+
+** Prolog
+   #+BEGIN_SRC emacs-lisp
+     (autoload 'prolog-mode "prolog" "Major mode for editing Prolog programs." t)
+     (add-to-list 'auto-mode-alist '("\\.pl\\'" . prolog-mode))
+   #+END_SRC
+
+* Initialization
+** Open to default buffer
+   Automatically open a todo org document on startup
+   #+BEGIN_SRC emacs-lisp
+     (find-file "~/Dropbox/TODO.org")
+   #+END_SRC
